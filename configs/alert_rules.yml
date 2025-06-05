@@ -1,0 +1,207 @@
+# Prometheus アラートルール設定
+# Ai-semble v2 システム監視アラート
+
+groups:
+  - name: aisemble_system_alerts
+    rules:
+      # システムリソースアラート
+      - alert: HighCPUUsage
+        expr: aisemble_system_cpu_usage_percent > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is {{ $value }}% for more than 5 minutes"
+          
+      - alert: CriticalCPUUsage
+        expr: aisemble_system_cpu_usage_percent > 95
+        for: 2m
+        labels:
+          severity: critical
+          service: system
+        annotations:
+          summary: "Critical CPU usage detected"
+          description: "CPU usage is {{ $value }}% for more than 2 minutes"
+          
+      - alert: HighMemoryUsage
+        expr: aisemble_system_memory_usage_percent > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is {{ $value }}% for more than 5 minutes"
+          
+      - alert: CriticalMemoryUsage
+        expr: aisemble_system_memory_usage_percent > 95
+        for: 2m
+        labels:
+          severity: critical
+          service: system
+        annotations:
+          summary: "Critical memory usage detected"
+          description: "Memory usage is {{ $value }}% for more than 2 minutes"
+          
+      - alert: HighDiskUsage
+        expr: aisemble_system_disk_usage_percent > 80
+        for: 10m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High disk usage detected"
+          description: "Disk usage is {{ $value }}% for more than 10 minutes"
+          
+      - alert: CriticalDiskUsage
+        expr: aisemble_system_disk_usage_percent > 90
+        for: 5m
+        labels:
+          severity: critical
+          service: system
+        annotations:
+          summary: "Critical disk usage detected"
+          description: "Disk usage is {{ $value }}% for more than 5 minutes"
+
+  - name: aisemble_service_alerts
+    rules:
+      # サービス可用性アラート
+      - alert: ServiceDown
+        expr: aisemble_active_connections == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.service }} is down"
+          description: "Service {{ $labels.service }} has been down for more than 1 minute"
+          
+      - alert: HighErrorRate
+        expr: rate(aisemble_errors_total[5m]) > 0.1
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate in {{ $labels.service }}"
+          description: "Error rate is {{ $value }} errors/second in {{ $labels.service }}"
+          
+      - alert: SlowResponseTime
+        expr: histogram_quantile(0.95, rate(aisemble_request_duration_seconds_bucket[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow response time in {{ $labels.service }}"
+          description: "95th percentile response time is {{ $value }} seconds"
+
+  - name: aisemble_model_alerts
+    rules:
+      # AIモデル関連アラート
+      - alert: ModelInferenceFailure
+        expr: rate(aisemble_model_inference_total{status="failure"}[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High model inference failure rate"
+          description: "Model {{ $labels.model_name }} has failure rate of {{ $value }} failures/second"
+          
+      - alert: SlowModelInference
+        expr: histogram_quantile(0.95, rate(aisemble_model_inference_duration_seconds_bucket[5m])) > 30
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow model inference"
+          description: "95th percentile inference time for {{ $labels.model_name }} is {{ $value }} seconds"
+          
+      - alert: NoModelInferences
+        expr: rate(aisemble_model_inference_total[10m]) == 0
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No model inferences detected"
+          description: "No model inferences have been recorded for 15 minutes"
+
+  - name: aisemble_request_alerts
+    rules:
+      # リクエスト関連アラート
+      - alert: HighRequestRate
+        expr: rate(aisemble_requests_total[5m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High request rate"
+          description: "Request rate is {{ $value }} requests/second"
+          
+      - alert: HighHTTPErrorRate
+        expr: rate(aisemble_requests_total{status_code=~"5.."}[5m]) / rate(aisemble_requests_total[5m]) > 0.05
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High HTTP 5xx error rate"
+          description: "HTTP 5xx error rate is {{ $value | humanizePercentage }}"
+          
+      - alert: NoTraffic
+        expr: rate(aisemble_requests_total[10m]) == 0
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No traffic detected"
+          description: "No requests have been received for 15 minutes"
+
+  - name: aisemble_container_alerts
+    rules:
+      # コンテナ関連アラート
+      - alert: ContainerCPUHigh
+        expr: rate(container_cpu_usage_seconds_total{name=~"aisemble.*"}[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.name }} high CPU usage"
+          description: "Container CPU usage is {{ $value }}%"
+          
+      - alert: ContainerMemoryHigh
+        expr: container_memory_usage_bytes{name=~"aisemble.*"} / container_spec_memory_limit_bytes{name=~"aisemble.*"} * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.name }} high memory usage"
+          description: "Container memory usage is {{ $value }}%"
+          
+      - alert: ContainerRestarting
+        expr: rate(container_last_seen{name=~"aisemble.*"}[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.name }} is restarting"
+          description: "Container has been restarting frequently"
+
+  - name: aisemble_backup_alerts
+    rules:
+      # バックアップ関連アラート
+      - alert: BackupJobFailed
+        expr: time() - backup_last_success_timestamp > 86400  # 24時間
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backup job {{ $labels.job }} failed"
+          description: "Backup job has not succeeded for more than 24 hours"
+          
+      - alert: BackupStorageFull
+        expr: backup_storage_usage_percent > 90
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backup storage nearly full"
+          description: "Backup storage usage is {{ $value }}%"

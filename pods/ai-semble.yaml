@@ -122,6 +122,102 @@ spec:
       timeoutSeconds: 5
       failureThreshold: 3
 
+  # Vision Service Container
+  - name: vision-service
+    image: localhost/ai-semble/vision:latest
+    ports:
+    - containerPort: 8082
+      name: vision-http
+    env:
+    - name: LOG_LEVEL
+      value: "INFO"
+    volumeMounts:
+    - name: models
+      mountPath: /models
+      readOnly: true
+    - name: shared-data
+      mountPath: /data
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+    resources:
+      requests:
+        memory: "2Gi"
+        cpu: "500m"
+      limits:
+        memory: "4Gi"
+        cpu: "1000m"
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 8082
+      initialDelaySeconds: 60
+      periodSeconds: 30
+      timeoutSeconds: 10
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /health
+        port: 8082
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+
+  # NLP Service Container
+  - name: nlp-service
+    image: localhost/ai-semble/nlp:latest
+    ports:
+    - containerPort: 8083
+      name: nlp-http
+    env:
+    - name: LOG_LEVEL
+      value: "INFO"
+    volumeMounts:
+    - name: models
+      mountPath: /models
+      readOnly: true
+    - name: shared-data
+      mountPath: /data
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "500m"
+      limits:
+        memory: "2Gi"
+        cpu: "1000m"
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 8083
+      initialDelaySeconds: 60
+      periodSeconds: 30
+      timeoutSeconds: 10
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /health
+        port: 8083
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+
   # Data Processor Container
   - name: data-processor
     image: localhost/ai-semble/processor:latest

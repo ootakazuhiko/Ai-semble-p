@@ -5,7 +5,11 @@
       "Bash(ls:*)",
       "WebFetch(domain:github.com)",
       "Bash(mkdir:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(python3:*)",
+      "Bash(docker:*)",
+      "Bash(cat:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }

@@ -154,6 +154,20 @@ build_images() {
         -t localhost/ai-semble/llm:dev \
         "$containers_dir/ai-services/llm"
     
+    # Vision Service
+    log_info "Vision Serviceイメージをビルド中..."
+    podman build \
+        -t localhost/ai-semble/vision:latest \
+        -t localhost/ai-semble/vision:dev \
+        "$containers_dir/ai-services/vision"
+    
+    # NLP Service
+    log_info "NLP Serviceイメージをビルド中..."
+    podman build \
+        -t localhost/ai-semble/nlp:latest \
+        -t localhost/ai-semble/nlp:dev \
+        "$containers_dir/ai-services/nlp"
+    
     # Data Processor
     log_info "Data Processorイメージをビルド中..."
     podman build \
@@ -224,6 +238,8 @@ verify_setup() {
     local images=(
         "localhost/ai-semble/orchestrator:latest"
         "localhost/ai-semble/llm:latest"
+        "localhost/ai-semble/vision:latest"
+        "localhost/ai-semble/nlp:latest"
         "localhost/ai-semble/processor:latest"
     )
     

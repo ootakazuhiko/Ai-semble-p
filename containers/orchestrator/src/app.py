@@ -9,8 +9,8 @@ import structlog
 from prometheus_client import Counter, Histogram, generate_latest
 from fastapi.responses import PlainTextResponse
 
-from .api import health, ai, jobs
-from .config.settings import get_settings
+from api import health, ai, jobs, models, operations
+from config.settings import get_settings
 
 # 構造化ロギング設定
 structlog.configure(
@@ -56,6 +56,8 @@ app.add_middleware(
 app.include_router(health.router, prefix="/health", tags=["health"])
 app.include_router(ai.router, prefix="/ai", tags=["ai"])
 app.include_router(jobs.router, prefix="/jobs", tags=["jobs"])
+app.include_router(models.router, prefix="/models", tags=["models"])
+app.include_router(operations.router, prefix="/ops", tags=["operations"])
 
 @app.get("/metrics")
 async def metrics():
@@ -65,10 +67,36 @@ async def metrics():
 @app.on_event("startup")
 async def startup_event():
     logger.info("orchestrator_startup", service="orchestrator", version="2.0.0")
+    
+    # 運用サービス初期化
+    from services.monitoring import get_monitoring_service
+    from services.backup_service import get_backup_service
+    
+    # 監視サービス開始
+    monitoring = get_monitoring_service()
+    await monitoring.start_monitoring()
+    
+    # バックアップスケジューラー開始
+    backup_service = get_backup_service()
+    await backup_service.start_scheduler()
+    
+    logger.info("operations_services_started")
 
 @app.on_event("shutdown")
 async def shutdown_event():
     logger.info("orchestrator_shutdown", service="orchestrator")
+    
+    # 運用サービス停止
+    from services.monitoring import get_monitoring_service
+    from services.backup_service import get_backup_service
+    
+    monitoring = get_monitoring_service()
+    await monitoring.stop_monitoring()
+    
+    backup_service = get_backup_service()
+    await backup_service.stop_scheduler()
+    
+    logger.info("operations_services_stopped")
 
 if __name__ == "__main__":
     settings = get_settings()

@@ -1,0 +1,259 @@
+# Ai-semble v2 モデル設定ファイル
+# 各種AIモデルの設定と能力定義
+
+llm_models:
+  gpt-3.5-turbo:
+    provider: openai
+    endpoint: https://api.openai.com/v1/chat/completions
+    max_tokens: 4096
+    cost_per_token: 0.002
+    task: llm
+    capabilities: 
+      - text_generation
+      - chat
+      - code_generation
+      - translation
+    quality_score: 0.90
+    speed_score: 0.85
+    
+  gpt-4:
+    provider: openai
+    endpoint: https://api.openai.com/v1/chat/completions
+    max_tokens: 8192
+    cost_per_token: 0.03
+    task: llm
+    capabilities:
+      - text_generation
+      - chat
+      - code_generation
+      - reasoning
+      - analysis
+      - translation
+    quality_score: 0.98
+    speed_score: 0.60
+    
+  llama2-7b:
+    provider: huggingface
+    model_id: meta-llama/Llama-2-7b-chat-hf
+    device: cuda
+    quantization: 4bit
+    task: llm
+    capabilities:
+      - text_generation
+      - chat
+    quality_score: 0.80
+    speed_score: 0.90
+    local: true
+    
+  llama2-13b:
+    provider: huggingface
+    model_id: meta-llama/Llama-2-13b-chat-hf
+    device: cuda
+    quantization: 4bit
+    task: llm
+    capabilities:
+      - text_generation
+      - chat
+      - reasoning
+    quality_score: 0.85
+    speed_score: 0.75
+    local: true
+    
+  code-llama:
+    provider: huggingface
+    model_id: codellama/CodeLlama-7b-Instruct-hf
+    device: cuda
+    quantization: 4bit
+    task: llm
+    domain: code
+    capabilities:
+      - code_generation
+      - code_completion
+      - code_analysis
+      - debugging
+    quality_score: 0.88
+    speed_score: 0.85
+    local: true
+    
+  japanese-stablelm:
+    provider: local
+    model_path: /models/japanese-stablelm-base-alpha-7b
+    tokenizer_path: /models/japanese-stablelm-tokenizer
+    task: llm
+    language: ja
+    capabilities:
+      - text_generation
+      - japanese_chat
+      - japanese_writing
+    quality_score: 0.85
+    speed_score: 0.80
+    local: true
+
+vision_models:
+  yolo-v8:
+    provider: ultralytics
+    model_id: yolov8n.pt
+    task: object_detection
+    capabilities:
+      - object_detection
+      - bbox_prediction
+      - real_time_detection
+    quality_score: 0.85
+    speed_score: 0.95
+    input_formats: [jpg, png, webp]
+    
+  yolo-v8-large:
+    provider: ultralytics
+    model_id: yolov8l.pt
+    task: object_detection
+    capabilities:
+      - object_detection
+      - bbox_prediction
+      - high_accuracy_detection
+    quality_score: 0.92
+    speed_score: 0.70
+    input_formats: [jpg, png, webp]
+    
+  sam:
+    provider: local
+    model_path: /models/sam_vit_h_4b8939.pth
+    task: segmentation
+    capabilities:
+      - image_segmentation
+      - mask_generation
+      - interactive_segmentation
+    quality_score: 0.95
+    speed_score: 0.60
+    input_formats: [jpg, png]
+    
+  stable-diffusion:
+    provider: diffusers
+    model_id: runwayml/stable-diffusion-v1-5
+    task: image_generation
+    capabilities:
+      - text_to_image
+      - image_generation
+      - creative_art
+    quality_score: 0.88
+    speed_score: 0.65
+    output_formats: [png, jpg]
+    
+  clip:
+    provider: huggingface
+    model_id: openai/clip-vit-base-patch32
+    task: multimodal
+    capabilities:
+      - image_text_matching
+      - image_classification
+      - zero_shot_classification
+    quality_score: 0.85
+    speed_score: 0.90
+
+nlp_models:
+  bert-base:
+    provider: huggingface
+    model_id: bert-base-uncased
+    task: classification
+    capabilities:
+      - text_classification
+      - sentiment_analysis
+      - entity_recognition
+    quality_score: 0.80
+    speed_score: 0.85
+    
+  biobert:
+    provider: huggingface
+    model_id: dmis-lab/biobert-base-cased-v1.1
+    domain: medical
+    task: classification
+    capabilities:
+      - medical_ner
+      - medical_classification
+      - clinical_text_analysis
+    quality_score: 0.92
+    speed_score: 0.80
+    
+  legalbert:
+    provider: huggingface
+    model_id: nlpaueb/legal-bert-base-uncased
+    domain: legal
+    task: classification
+    capabilities:
+      - legal_text_analysis
+      - contract_analysis
+      - legal_classification
+    quality_score: 0.90
+    speed_score: 0.80
+    
+  finbert:
+    provider: huggingface
+    model_id: ProsusAI/finbert
+    domain: financial
+    task: classification
+    capabilities:
+      - financial_sentiment
+      - financial_classification
+      - market_analysis
+    quality_score: 0.88
+    speed_score: 0.85
+    
+  multilingual-bert:
+    provider: huggingface
+    model_id: bert-base-multilingual-cased
+    task: classification
+    languages: [en, ja, zh, ko, de, fr, es]
+    capabilities:
+      - multilingual_classification
+      - cross_lingual_analysis
+      - language_detection
+    quality_score: 0.82
+    speed_score: 0.80
+
+# モデル選択戦略設定
+selection_strategies:
+  quality_first:
+    priority: quality
+    fallback_strategy: performance
+    cost_threshold: 0.1
+    
+  cost_efficient:
+    priority: cost
+    fallback_strategy: local
+    quality_threshold: 0.75
+    
+  balanced:
+    priority: balanced
+    quality_weight: 0.4
+    speed_weight: 0.3
+    cost_weight: 0.3
+    
+  speed_optimized:
+    priority: speed
+    fallback_strategy: local
+    quality_threshold: 0.70
+
+# ドメイン別推奨モデル
+domain_recommendations:
+  medical:
+    primary: biobert
+    fallback: [gpt-4, bert-base]
+    
+  legal:
+    primary: legalbert
+    fallback: [gpt-4, bert-base]
+    
+  financial:
+    primary: finbert
+    fallback: [gpt-4, bert-base]
+    
+  code:
+    primary: code-llama
+    fallback: [gpt-4, gpt-3.5-turbo]
+    
+  creative:
+    primary: gpt-4
+    fallback: [gpt-3.5-turbo, llama2-13b]
+    
+  japanese:
+    primary: japanese-stablelm
+    fallback: [gpt-4, multilingual-bert]

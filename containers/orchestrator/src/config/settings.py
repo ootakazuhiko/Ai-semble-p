@@ -1,7 +1,7 @@
 """
 設定管理
 """
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 from typing import Optional
 
 class Settings(BaseSettings):
@@ -25,6 +25,17 @@ class Settings(BaseSettings):
     # 認証設定
     enable_auth: bool = False
     secret_key: Optional[str] = None
+    
+    # パフォーマンス設定
+    http_pool_connections: int = 20
+    http_pool_maxsize: int = 100
+    http_timeout: float = 30.0
+    http_connect_timeout: float = 5.0
+    
+    # キャッシュ設定
+    enable_cache: bool = True
+    cache_ttl: int = 3600
+    redis_url: str = "redis://localhost:6379"
     
     class Config:
         env_file = ".env"

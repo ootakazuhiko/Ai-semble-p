@@ -34,6 +34,8 @@ Ai-semble v2は、DockerからPodman/systemdネイティブへ移行し、Rootle
 
 - **Orchestrator**: メインAPI・ワークフロー管理 (ポート: 8080)
 - **LLM Service**: 大規模言語モデル推論 (ポート: 8081)
+- **Vision Service**: 画像解析・コンピュータビジョン (ポート: 8082)
+- **NLP Service**: 自然言語処理・テキスト分析 (ポート: 8083)
 - **Data Processor**: データ処理・ETL (ポート: 8084)
 
 ## クイックスタート
@@ -93,7 +95,8 @@ Ai-semble v2は、DockerからPodman/systemdネイティブへ移行し、Rootle
 
 - `GET /health` - ヘルスチェック
 - `POST /ai/llm/completion` - LLM推論実行
-- `POST /ai/vision/analyze` - 画像解析実行  
+- `POST /ai/vision/analyze` - 画像解析実行
+- `POST /ai/nlp/process` - NLP処理実行
 - `POST /data/process` - データ処理実行
 - `GET /jobs/{id}` - ジョブ状態確認
 - `GET /metrics` - Prometheusメトリクス
@@ -108,6 +111,22 @@ curl -X POST http://localhost:8080/ai/llm/completion \\
     "prompt": "Hello, how are you?",
     "max_tokens": 100,
     "temperature": 0.7
+  }'
+
+# 画像解析
+curl -X POST http://localhost:8080/ai/vision/analyze \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "image_url": "https://example.com/image.jpg",
+    "task": "analyze"
+  }'
+
+# NLP処理（感情分析）
+curl -X POST http://localhost:8080/ai/nlp/process \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "text": "This is a great product!",
+    "task": "sentiment"
   }'
 
 # データ処理
@@ -260,15 +279,24 @@ podman stats --no-stream
 ### テスト実行
 
 ```bash
-# ユニットテスト
-pytest tests/unit/
+# 全テスト実行
+./scripts/run-tests.sh all
 
-# 統合テスト  
-./scripts/deploy.sh start --dev
-pytest tests/integration/
+# ユニットテストのみ
+./scripts/run-tests.sh unit
 
-# E2Eテスト
-pytest tests/e2e/
+# 統合テストのみ（サービス起動後）
+./scripts/deploy.sh start
+./scripts/run-tests.sh integration
+
+# コード品質チェック
+./scripts/run-tests.sh lint
+
+# 簡易テスト
+./scripts/run-tests.sh quick
+
+# カバレッジ付きテスト
+./scripts/run-tests.sh unit --coverage
 ```
 
 ### イメージビルド
