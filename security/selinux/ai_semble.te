@@ -1,0 +1,124 @@
+policy_module(ai_semble, 1.0.0)
+
+# SELinux Policy for Ai-semble v2
+# Podmanネイティブな AI オーケストレーションプラットフォーム用ポリシー
+
+########################################
+# 
+# Declarations
+#
+
+# AI-semble アプリケーション用のタイプ定義
+type ai_semble_t;
+type ai_semble_exec_t;
+type ai_semble_data_t;
+type ai_semble_models_t;
+type ai_semble_config_t;
+type ai_semble_log_t;
+
+# ポート定義
+type ai_semble_port_t;
+
+########################################
+#
+# AI-semble domain
+#
+
+# ドメイン移行ルール
+domain_type(ai_semble_t)
+domain_entry_file(ai_semble_t, ai_semble_exec_t)
+
+# ファイルタイプ定義
+files_type(ai_semble_data_t)
+files_type(ai_semble_models_t)
+files_type(ai_semble_config_t)
+files_type(ai_semble_log_t)
+
+# ポートタイプ定義
+corenet_port(ai_semble_port_t)
+
+########################################
+#
+# AI-semble local policy
+#
+
+# 基本的なシステム権限
+allow ai_semble_t self:process { fork signal_perms };
+allow ai_semble_t self:fifo_file rw_fifo_file_perms;
+allow ai_semble_t self:unix_stream_socket create_stream_socket_perms;
+
+# ファイルシステム権限
+allow ai_semble_t ai_semble_exec_t:file { read getattr execute execute_no_trans };
+
+# データディレクトリアクセス
+allow ai_semble_t ai_semble_data_t:dir { read write add_name remove_name search };
+allow ai_semble_t ai_semble_data_t:file { read write create unlink getattr setattr };
+
+# モデルディレクトリアクセス（読み取り専用）
+allow ai_semble_t ai_semble_models_t:dir { read search };
+allow ai_semble_t ai_semble_models_t:file { read getattr };
+
+# 設定ファイルアクセス（読み取り専用）
+allow ai_semble_t ai_semble_config_t:dir { read search };
+allow ai_semble_t ai_semble_config_t:file { read getattr };
+
+# ログファイルアクセス
+allow ai_semble_t ai_semble_log_t:dir { read write add_name search };
+allow ai_semble_t ai_semble_log_t:file { read write create append getattr setattr };
+
+# ネットワークアクセス
+allow ai_semble_t self:tcp_socket create_stream_socket_perms;
+allow ai_semble_t ai_semble_port_t:tcp_socket name_bind;
+allow ai_semble_t self:udp_socket create_socket_perms;
+
+# Podman コンテナ間通信
+corenet_tcp_bind_generic_node(ai_semble_t)
+corenet_tcp_bind_all_unreserved_ports(ai_semble_t)
+corenet_tcp_connect_all_ports(ai_semble_t)
+
+# GPU デバイスアクセス（NVIDIA GPU用）
+dev_read_sysfs(ai_semble_t)
+allow ai_semble_t device_t:chr_file { read write };
+
+# コンテナランタイム権限
+container_runtime_domain(ai_semble_t)
+container_use_ptys(ai_semble_t)
+
+# systemdとの連携
+systemd_use_fds(ai_semble_t)
+systemd_use_inherited_fds(ai_semble_t)
+
+########################################
+#
+# File context specifications
+#
+
+# /data/ai-semble/.*
+gen_context(system_u:object_r:ai_semble_data_t,s0)
+
+# /models/ai-semble/.*
+gen_context(system_u:object_r:ai_semble_models_t,s0)
+
+# /etc/ai-semble/.*
+gen_context(system_u:object_r:ai_semble_config_t,s0)
+
+# /var/log/ai-semble/.*
+gen_context(system_u:object_r:ai_semble_log_t,s0)
+
+########################################
+#
+# Network context specifications
+#
+
+# AI-semble サービスポート
+# 8080/tcp - Orchestrator
+# 8081/tcp - LLM Service  
+# 8082/tcp - Vision Service
+# 8083/tcp - NLP Service
+# 8084/tcp - Data Processor
+
+portcon tcp 8080 gen_context(system_u:object_r:ai_semble_port_t,s0)
+portcon tcp 8081 gen_context(system_u:object_r:ai_semble_port_t,s0)
+portcon tcp 8082 gen_context(system_u:object_r:ai_semble_port_t,s0)
+portcon tcp 8083 gen_context(system_u:object_r:ai_semble_port_t,s0)
+portcon tcp 8084 gen_context(system_u:object_r:ai_semble_port_t,s0)

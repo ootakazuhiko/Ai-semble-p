@@ -1,0 +1,45 @@
+FROM python:3.11-slim
+
+# NVIDIA GPU対応
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
+# セキュリティ設定
+RUN groupadd -r aiuser && useradd -r -g aiuser aiuser
+
+# システム依存関係
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# 作業ディレクトリ
+WORKDIR /app
+
+# Python依存関係ファイル
+COPY requirements.txt .
+
+# Python依存関係インストール
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# アプリケーションコード
+COPY src/ ./src/
+
+# モデルディレクトリ作成
+RUN mkdir -p /models && chown -R aiuser:aiuser /models
+
+# 権限設定
+RUN chown -R aiuser:aiuser /app
+USER aiuser
+
+# ヘルスチェック
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8081/health || exit 1
+
+# ポート公開
+EXPOSE 8081
+
+# 起動コマンド
+CMD ["python", "-m", "src.llm_service"]

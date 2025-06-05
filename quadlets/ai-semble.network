@@ -1,0 +1,33 @@
+[Unit]
+Description=Ai-semble Network
+Documentation=https://github.com/ootakazuhiko/Ai-semble-p
+
+[Network]
+NetworkName=ai-semble
+Driver=bridge
+Internal=false
+Subnet=10.88.0.0/24
+Gateway=10.88.0.1
+DNSEnabled=true
+IPv6=false
+
+# セキュリティ設定
+DisableRoute=false
+Label=app=ai-semble
+Label=version=v2.0.0
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/podman network create \
+    --driver bridge \
+    --subnet 10.88.0.0/24 \
+    --gateway 10.88.0.1 \
+    --label app=ai-semble \
+    --label version=v2.0.0 \
+    ai-semble
+
+ExecStop=/usr/bin/podman network rm ai-semble
+
+[Install]
+WantedBy=default.target

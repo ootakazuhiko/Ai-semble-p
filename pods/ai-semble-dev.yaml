@@ -1,0 +1,167 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ai-semble-dev
+  labels:
+    app: ai-semble
+    version: v2.0.0
+    environment: development
+spec:
+  restartPolicy: Always
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+  
+  containers:
+  # Orchestrator Container (Development)
+  - name: orchestrator-dev
+    image: localhost/ai-semble/orchestrator:dev
+    ports:
+    - containerPort: 8080
+      name: http
+    env:
+    - name: LLM_SERVICE_URL
+      value: "http://localhost:8081"
+    - name: DATA_PROCESSOR_URL
+      value: "http://localhost:8084"
+    - name: LOG_LEVEL
+      value: "DEBUG"
+    - name: FLASK_ENV
+      value: "development"
+    - name: PYTHONPATH
+      value: "/app"
+    command: ["python", "-m", "uvicorn"]
+    args: ["src.app:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
+    volumeMounts:
+    - name: source-code
+      mountPath: /app/src
+    - name: shared-data
+      mountPath: /data
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+      limits:
+        memory: "512Mi"
+        cpu: "250m"
+
+  # LLM Service Container (Development - smaller model)
+  - name: llm-service-dev
+    image: localhost/ai-semble/llm:dev
+    ports:
+    - containerPort: 8081
+      name: llm-http
+    env:
+    - name: MODEL_NAME
+      value: "microsoft/DialoGPT-small"
+    - name: LOG_LEVEL
+      value: "DEBUG"
+    volumeMounts:
+    - name: models
+      mountPath: /models
+    - name: shared-data
+      mountPath: /data
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "500m"
+      limits:
+        memory: "2Gi"
+        cpu: "1000m"
+
+  # Data Processor Container (Development)
+  - name: data-processor-dev
+    image: localhost/ai-semble/processor:dev
+    ports:
+    - containerPort: 8084
+      name: processor-http
+    env:
+    - name: DATA_DIR
+      value: "/data"
+    - name: LOG_LEVEL
+      value: "DEBUG"
+    volumeMounts:
+    - name: shared-data
+      mountPath: /data
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+
+  volumes:
+  # ソースコードボリューム（開発用）
+  - name: source-code
+    hostPath:
+      path: /path/to/ai-semble-v2/containers/orchestrator/src
+      type: Directory
+  
+  # 共有データボリューム
+  - name: shared-data
+    persistentVolumeClaim:
+      claimName: ai-semble-data-dev
+  
+  # AIモデル格納ボリューム
+  - name: models
+    persistentVolumeClaim:
+      claimName: ai-semble-models-dev
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ai-semble-data-dev
+  labels:
+    app: ai-semble
+    environment: development
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: local-storage
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ai-semble-models-dev
+  labels:
+    app: ai-semble
+    environment: development
+spec:
+  accessModes:
+    - ReadOnlyMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: local-storage

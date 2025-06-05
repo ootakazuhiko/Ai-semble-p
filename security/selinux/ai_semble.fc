@@ -1,0 +1,25 @@
+# AI-semble SELinux File Context Specifications
+# ファイルコンテキスト仕様
+
+# 実行ファイル
+/usr/local/bin/ai-semble.*	--	gen_context(system_u:object_r:ai_semble_exec_t,s0)
+
+# データディレクトリ
+/data/ai-semble(/.*)?			gen_context(system_u:object_r:ai_semble_data_t,s0)
+/var/lib/containers/storage/volumes/ai-semble-data(/.*)?	gen_context(system_u:object_r:ai_semble_data_t,s0)
+
+# モデルディレクトリ（読み取り専用）
+/models/ai-semble(/.*)?			gen_context(system_u:object_r:ai_semble_models_t,s0)
+/var/lib/containers/storage/volumes/ai-semble-models(/.*)?	gen_context(system_u:object_r:ai_semble_models_t,s0)
+
+# 設定ファイル
+/etc/ai-semble(/.*)?			gen_context(system_u:object_r:ai_semble_config_t,s0)
+/usr/local/etc/ai-semble(/.*)?		gen_context(system_u:object_r:ai_semble_config_t,s0)
+
+# ログファイル
+/var/log/ai-semble(/.*)?		gen_context(system_u:object_r:ai_semble_log_t,s0)
+/tmp/ai-semble.*\.log	--		gen_context(system_u:object_r:ai_semble_log_t,s0)
+
+# Podman 関連
+/home/[^/]+/\.local/share/containers/storage/volumes/ai-semble-data(/.*)?	gen_context(system_u:object_r:ai_semble_data_t,s0)
+/home/[^/]+/\.local/share/containers/storage/volumes/ai-semble-models(/.*)?	gen_context(system_u:object_r:ai_semble_models_t,s0)

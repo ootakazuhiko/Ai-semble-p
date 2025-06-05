@@ -1,0 +1,41 @@
+FROM python:3.11-slim
+
+# セキュリティ設定
+RUN groupadd -r processor && useradd -r -g processor processor
+
+# システム依存関係
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# 作業ディレクトリ
+WORKDIR /app
+
+# Python依存関係ファイル
+COPY requirements.txt .
+
+# Python依存関係インストール
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# アプリケーションコード
+COPY src/ ./src/
+COPY scripts/ ./scripts/
+
+# データディレクトリ作成
+RUN mkdir -p /data && chown -R processor:processor /data
+
+# 権限設定
+RUN chown -R processor:processor /app
+USER processor
+
+# ヘルスチェック
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8084/health || exit 1
+
+# ポート公開
+EXPOSE 8084
+
+# 起動コマンド
+CMD ["python", "-m", "src.processor_service"]

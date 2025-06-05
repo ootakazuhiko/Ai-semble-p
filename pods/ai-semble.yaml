@@ -1,0 +1,232 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ai-semble
+  labels:
+    app: ai-semble
+    version: v2.0.0
+    environment: production
+spec:
+  restartPolicy: Always
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+  
+  containers:
+  # Orchestrator Container
+  - name: orchestrator
+    image: localhost/ai-semble/orchestrator:latest
+    ports:
+    - containerPort: 8080
+      name: http
+    env:
+    - name: LLM_SERVICE_URL
+      value: "http://localhost:8081"
+    - name: VISION_SERVICE_URL
+      value: "http://localhost:8082"
+    - name: NLP_SERVICE_URL
+      value: "http://localhost:8083"
+    - name: DATA_PROCESSOR_URL
+      value: "http://localhost:8084"
+    - name: LOG_LEVEL
+      value: "INFO"
+    volumeMounts:
+    - name: shared-data
+      mountPath: /data
+    - name: config-volume
+      mountPath: /app/config
+      readOnly: true
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+    livenessProbe:
+      httpGet:
+        path: /health/live
+        port: 8080
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /health/ready
+        port: 8080
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+
+  # LLM Service Container
+  - name: llm-service
+    image: localhost/ai-semble/llm:latest
+    ports:
+    - containerPort: 8081
+      name: llm-http
+    env:
+    - name: MODEL_NAME
+      value: "microsoft/DialoGPT-small"
+    - name: CUDA_VISIBLE_DEVICES
+      value: "0"
+    volumeMounts:
+    - name: models
+      mountPath: /models
+      readOnly: true
+    - name: shared-data
+      mountPath: /data
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+    resources:
+      requests:
+        memory: "4Gi"
+        cpu: "1000m"
+      limits:
+        memory: "8Gi"
+        cpu: "2000m"
+        nvidia.com/gpu: 1
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 8081
+      initialDelaySeconds: 60
+      periodSeconds: 30
+      timeoutSeconds: 10
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /health
+        port: 8081
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+
+  # Data Processor Container
+  - name: data-processor
+    image: localhost/ai-semble/processor:latest
+    ports:
+    - containerPort: 8084
+      name: processor-http
+    env:
+    - name: DATA_DIR
+      value: "/data"
+    volumeMounts:
+    - name: shared-data
+      mountPath: /data
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "500m"
+      limits:
+        memory: "2Gi"
+        cpu: "1000m"
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 8084
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /health
+        port: 8084
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+
+  volumes:
+  # 共有データボリューム
+  - name: shared-data
+    persistentVolumeClaim:
+      claimName: ai-semble-data
+  
+  # AIモデル格納ボリューム
+  - name: models
+    persistentVolumeClaim:
+      claimName: ai-semble-models
+  
+  # 設定ファイルボリューム
+  - name: config-volume
+    configMap:
+      name: ai-semble-config
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ai-semble-data
+  labels:
+    app: ai-semble
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: local-storage
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ai-semble-models
+  labels:
+    app: ai-semble
+spec:
+  accessModes:
+    - ReadOnlyMany
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: local-storage
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-semble-config
+  labels:
+    app: ai-semble
+data:
+  production.yaml: |
+    logging:
+      level: INFO
+      format: json
+    security:
+      enable_auth: false
+    monitoring:
+      prometheus_enabled: true
+      metrics_port: 9090

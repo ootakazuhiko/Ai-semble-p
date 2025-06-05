@@ -1,0 +1,28 @@
+[Unit]
+Description=Ai-semble AI Models Volume
+Documentation=https://github.com/ootakazuhiko/Ai-semble-p
+
+[Volume]
+VolumeName=ai-semble-models
+Driver=local
+Label=app=ai-semble
+Label=type=models
+Label=version=v2.0.0
+
+# ボリュームオプション
+Options=type=bind,source=/var/lib/containers/storage/volumes/ai-semble-models,target=/models
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/podman volume create \
+    --driver local \
+    --label app=ai-semble \
+    --label type=models \
+    --label version=v2.0.0 \
+    ai-semble-models
+
+ExecStop=/usr/bin/podman volume rm ai-semble-models
+
+[Install]
+WantedBy=default.target

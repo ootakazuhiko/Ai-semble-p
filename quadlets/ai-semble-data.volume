@@ -1,0 +1,28 @@
+[Unit]
+Description=Ai-semble Shared Data Volume
+Documentation=https://github.com/ootakazuhiko/Ai-semble-p
+
+[Volume]
+VolumeName=ai-semble-data
+Driver=local
+Label=app=ai-semble
+Label=type=data
+Label=version=v2.0.0
+
+# ボリュームオプション
+Options=type=bind,source=/var/lib/containers/storage/volumes/ai-semble-data,target=/data
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/podman volume create \
+    --driver local \
+    --label app=ai-semble \
+    --label type=data \
+    --label version=v2.0.0 \
+    ai-semble-data
+
+ExecStop=/usr/bin/podman volume rm ai-semble-data
+
+[Install]
+WantedBy=default.target

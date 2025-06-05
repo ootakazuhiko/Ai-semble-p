@@ -1,0 +1,49 @@
+[Unit]
+Description=Ai-semble AI Orchestration Pod
+Documentation=https://github.com/ootakazuhiko/Ai-semble-p
+After=network-online.target
+Wants=network-online.target
+Requires=ai-semble.network ai-semble-data.volume ai-semble-models.volume
+
+[Pod]
+PodName=ai-semble
+Network=ai-semble.network
+Volume=ai-semble-data.volume:/data:Z
+Volume=ai-semble-models.volume:/models:Z,ro
+PublishPort=8080:8080
+
+# セキュリティ設定
+UserNS=auto
+SecurityLabelType=container_t
+
+[Service]
+Type=notify
+NotifyAccess=all
+Environment="PODMAN_SYSTEMD_UNIT=%n"
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=300s
+TimeoutStopSec=70s
+
+# Podman Pod管理
+ExecStartPre=/bin/rm -f %t/%n.ctr-id
+ExecStart=/usr/bin/podman pod create \
+    --infra-conmon-pidfile %t/%n.pid \
+    --pod-id-file %t/%n.pod-id \
+    --replace \
+    --name ai-semble \
+    --network ai-semble \
+    --publish 8080:8080 \
+    --userns=auto \
+    --security-opt label=type:container_t
+
+ExecStop=/usr/bin/podman pod stop --ignore --pod-id-file %t/%n.pod-id --time 30
+ExecStopPost=/usr/bin/podman pod rm --ignore -f --pod-id-file %t/%n.pod-id
+
+# リソース制限
+MemoryHigh=12G
+MemoryMax=16G
+CPUQuota=400%
+
+[Install]
+WantedBy=default.target
