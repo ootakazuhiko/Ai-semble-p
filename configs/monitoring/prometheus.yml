@@ -1,0 +1,66 @@
+# Prometheus Configuration for Ai-semble v2
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+rule_files:
+  - "alert_rules.yml"
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'ai-semble-orchestrator'
+    static_configs:
+      - targets: ['ai-semble-orchestrator:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  - job_name: 'ai-semble-llm'
+    static_configs:
+      - targets: ['ai-semble-llm:8081']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  - job_name: 'ai-semble-nlp'
+    static_configs:
+      - targets: ['ai-semble-nlp:8082']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  - job_name: 'ai-semble-vision'
+    static_configs:
+      - targets: ['ai-semble-vision:8083']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  - job_name: 'ai-semble-data-processor'
+    static_configs:
+      - targets: ['ai-semble-data-processor:8084']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+# Remote write (optional - for external Prometheus)
+# remote_write:
+#   - url: "https://your-remote-prometheus/api/v1/write"
+
+# Storage configuration
+storage:
+  tsdb:
+    retention.time: 30d
+    retention.size: 10GB

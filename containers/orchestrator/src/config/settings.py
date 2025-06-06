@@ -44,3 +44,7 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """設定インスタンスを取得"""
     return Settings()
+# Monitoring Configuration
+ENABLE_METRICS = True
+METRICS_PORT = 9091
+PROMETHEUS_MULTIPROC_DIR = "/tmp/prometheus_multiproc"

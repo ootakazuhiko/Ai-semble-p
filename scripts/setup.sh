@@ -94,8 +94,8 @@ create_network() {
     
     podman network create \
         --driver bridge \
-        --subnet 10.88.0.0/24 \
-        --gateway 10.88.0.1 \
+        --subnet 10.89.0.0/24 \
+        --gateway 10.89.0.1 \
         --label app=ai-semble \
         --label version=v2.0.0 \
         ai-semble

@@ -41,6 +41,16 @@ class ModelRegistry:
         """デフォルトモデル設定"""
         return {
             "llm_models": {
+                "gpt-4o": {
+                    "provider": "openai",
+                    "endpoint": "https://api.openai.com/v1/chat/completions",
+                    "max_tokens": 128000,
+                    "cost_per_token": 0.03,
+                    "task": "llm",
+                    "capabilities": ["text_generation", "chat", "code_generation", "reasoning", "multimodal"],
+                    "multimodal": True,
+                    "supports_vision": True
+                },
                 "gpt-3.5-turbo": {
                     "provider": "openai",
                     "endpoint": "https://api.openai.com/v1/chat/completions",
@@ -49,13 +59,39 @@ class ModelRegistry:
                     "task": "llm",
                     "capabilities": ["text_generation", "chat", "code_generation"]
                 },
-                "llama2-7b": {
-                    "provider": "huggingface",
-                    "model_id": "meta-llama/Llama-2-7b-chat-hf",
-                    "device": "cuda",
-                    "quantization": "4bit",
+                "claude-3-sonnet": {
+                    "provider": "anthropic",
+                    "endpoint": "https://api.anthropic.com/v1/messages",
+                    "max_tokens": 200000,
+                    "cost_per_token": 0.015,
                     "task": "llm",
-                    "capabilities": ["text_generation", "chat"]
+                    "capabilities": ["text_generation", "chat", "code_generation", "reasoning", "long_context"],
+                    "context_window": 200000
+                },
+                "llama-3.1-70b": {
+                    "provider": "meta",
+                    "model_id": "meta-llama/Meta-Llama-3.1-70B-Instruct",
+                    "device": "cuda",
+                    "quantization": "8bit",
+                    "task": "llm",
+                    "capabilities": ["text_generation", "chat", "code_generation", "multilingual"],
+                    "open_source": True
+                },
+                "codellama-34b": {
+                    "provider": "meta",
+                    "model_id": "codellama/CodeLlama-34b-Instruct-hf",
+                    "device": "cuda",
+                    "task": "code_generation",
+                    "capabilities": ["code_generation", "code_completion", "debugging"],
+                    "specialization": "programming"
+                },
+                "gemini-pro": {
+                    "provider": "google",
+                    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro",
+                    "max_tokens": 32768,
+                    "task": "llm",
+                    "capabilities": ["text_generation", "chat", "reasoning", "multimodal"],
+                    "multimodal": True
                 },
                 "japanese-stablelm": {
                     "provider": "local",
@@ -73,17 +109,44 @@ class ModelRegistry:
                     "task": "object_detection",
                     "capabilities": ["object_detection", "bbox_prediction"]
                 },
-                "sam": {
-                    "provider": "local",
-                    "model_path": "/models/sam_vit_h_4b8939.pth",
-                    "task": "segmentation",
-                    "capabilities": ["image_segmentation", "mask_generation"]
+                "yolo-v9": {
+                    "provider": "ultralytics",
+                    "model_id": "yolov9c.pt",
+                    "task": "object_detection",
+                    "capabilities": ["object_detection", "bbox_prediction", "real_time_detection"],
+                    "performance": "high"
                 },
-                "stable-diffusion": {
-                    "provider": "diffusers",
-                    "model_id": "runwayml/stable-diffusion-v1-5",
+                "sam-2": {
+                    "provider": "meta",
+                    "model_path": "/models/sam2_hiera_large.pt",
+                    "task": "segmentation",
+                    "capabilities": ["image_segmentation", "video_segmentation", "mask_generation", "real_time_tracking"]
+                },
+                "stable-diffusion-xl": {
+                    "provider": "stability",
+                    "model_id": "stabilityai/stable-diffusion-xl-base-1.0",
                     "task": "image_generation",
-                    "capabilities": ["text_to_image", "image_generation"]
+                    "capabilities": ["text_to_image", "image_generation", "high_resolution", "inpainting"],
+                    "resolution": "1024x1024"
+                },
+                "dalle-3": {
+                    "provider": "openai",
+                    "endpoint": "https://api.openai.com/v1/images/generations",
+                    "task": "image_generation",
+                    "capabilities": ["text_to_image", "creative_generation", "photorealistic"],
+                    "cost_per_image": 0.04
+                },
+                "clip-vit": {
+                    "provider": "openai",
+                    "model_id": "openai/clip-vit-large-patch14",
+                    "task": "image_understanding",
+                    "capabilities": ["image_classification", "zero_shot_classification", "text_image_matching"]
+                },
+                "depth-anything": {
+                    "provider": "local",
+                    "model_path": "/models/depth_anything_vitl14.pth",
+                    "task": "depth_estimation",
+                    "capabilities": ["monocular_depth", "depth_mapping", "3d_reconstruction"]
                 }
             },
             "nlp_models": {
@@ -93,12 +156,56 @@ class ModelRegistry:
                     "task": "classification",
                     "capabilities": ["text_classification", "sentiment_analysis"]
                 },
+                "roberta-large": {
+                    "provider": "huggingface",
+                    "model_id": "roberta-large",
+                    "task": "classification",
+                    "capabilities": ["text_classification", "sentiment_analysis", "emotion_detection"]
+                },
+                "deberta-v3": {
+                    "provider": "microsoft",
+                    "model_id": "microsoft/deberta-v3-large",
+                    "task": "classification",
+                    "capabilities": ["text_classification", "nli", "qa", "multilingual"]
+                },
                 "biobert": {
                     "provider": "huggingface",
                     "model_id": "dmis-lab/biobert-base-cased-v1.1",
                     "domain": "medical",
                     "task": "classification",
                     "capabilities": ["medical_ner", "medical_classification"]
+                },
+                "spacy-en": {
+                    "provider": "spacy",
+                    "model_id": "en_core_web_trf",
+                    "task": "ner",
+                    "capabilities": ["named_entity_recognition", "pos_tagging", "dependency_parsing"]
+                },
+                "whisper-large": {
+                    "provider": "openai",
+                    "model_id": "openai/whisper-large-v3",
+                    "task": "speech_to_text",
+                    "capabilities": ["speech_recognition", "transcription", "multilingual", "translation"]
+                }
+            },
+            "multimodal_models": {
+                "gpt-4-vision": {
+                    "provider": "openai",
+                    "endpoint": "https://api.openai.com/v1/chat/completions",
+                    "task": "multimodal",
+                    "capabilities": ["vision_language", "image_qa", "text_generation", "image_understanding"]
+                },
+                "flamingo": {
+                    "provider": "deepmind",
+                    "model_path": "/models/flamingo-9b",
+                    "task": "multimodal",
+                    "capabilities": ["few_shot_learning", "vision_language", "image_captioning"]
+                },
+                "blip-2": {
+                    "provider": "salesforce",
+                    "model_id": "Salesforce/blip2-opt-6.7b",
+                    "task": "vision_language",
+                    "capabilities": ["image_captioning", "visual_qa", "image_text_matching"]
                 }
             }
         }

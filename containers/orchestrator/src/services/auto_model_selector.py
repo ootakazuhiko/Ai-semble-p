@@ -66,12 +66,19 @@ class AutoModelSelector:
         
         # 性能・コスト・品質マトリックス
         self.model_metrics = {
+            'gpt-4o': {'performance': 0.98, 'cost': 0.15, 'quality': 0.99, 'multimodal': True},
             'gpt-4': {'performance': 0.95, 'cost': 0.2, 'quality': 0.98},
+            'claude-3-sonnet': {'performance': 0.94, 'cost': 0.4, 'quality': 0.97, 'context_length': 200000},
             'gpt-3.5-turbo': {'performance': 0.85, 'cost': 0.8, 'quality': 0.90},
+            'gemini-pro': {'performance': 0.90, 'cost': 0.6, 'quality': 0.93, 'multimodal': True},
+            'llama-3.1-70b': {'performance': 0.88, 'cost': 0.95, 'quality': 0.87, 'open_source': True},
+            'codellama-34b': {'performance': 0.85, 'cost': 0.90, 'quality': 0.92, 'specialization': 'code'},
             'llama2-7b': {'performance': 0.75, 'cost': 0.95, 'quality': 0.80},
-            'japanese-stablelm': {'performance': 0.70, 'cost': 0.90, 'quality': 0.85},
-            'code-llama': {'performance': 0.80, 'cost': 0.90, 'quality': 0.88},
-            'biobert': {'performance': 0.85, 'cost': 0.85, 'quality': 0.92}
+            'japanese-stablelm': {'performance': 0.70, 'cost': 0.90, 'quality': 0.85, 'language': 'ja'},
+            'biobert': {'performance': 0.85, 'cost': 0.85, 'quality': 0.92, 'domain': 'medical'},
+            'yolo-v9': {'performance': 0.90, 'cost': 0.80, 'quality': 0.88, 'real_time': True},
+            'stable-diffusion-xl': {'performance': 0.88, 'cost': 0.70, 'quality': 0.90, 'resolution': 'high'},
+            'whisper-large': {'performance': 0.92, 'cost': 0.75, 'quality': 0.94, 'multilingual': True}
         }
     
     def select_optimal_model(self, 
@@ -160,22 +167,36 @@ class AutoModelSelector:
         available = self.registry.list_available_models()
         
         if priority == "quality":
-            # 品質優先: GPT-4 > Code Llama > GPT-3.5
-            if self._is_model_available('gpt-4', available):
+            # 品質優先: GPT-4o > Claude-3-Sonnet > CodeLlama-34b
+            if self._is_model_available('gpt-4o', available):
                 return ModelSelection(
-                    model_name='gpt-4',
-                    confidence=0.95,
-                    reason="High-quality code generation with GPT-4",
+                    model_name='gpt-4o',
+                    confidence=0.98,
+                    reason="State-of-the-art code generation with multimodal support",
+                    fallback_models=[]
+                )
+            elif self._is_model_available('claude-3-sonnet', available):
+                return ModelSelection(
+                    model_name='claude-3-sonnet',
+                    confidence=0.94,
+                    reason="High-quality reasoning for complex code tasks",
                     fallback_models=[]
                 )
         
         if priority == "cost" or priority == "balanced":
-            # コスト効率: Code Llama > GPT-3.5 > GPT-4
-            if self._is_model_available('code-llama', available):
+            # コスト効率: CodeLlama-34b > Llama-3.1-70b > GPT-3.5
+            if self._is_model_available('codellama-34b', available):
                 return ModelSelection(
-                    model_name='code-llama',
-                    confidence=0.88,
-                    reason="Cost-efficient specialized code model",
+                    model_name='codellama-34b',
+                    confidence=0.92,
+                    reason="Specialized code model with high efficiency",
+                    fallback_models=[]
+                )
+            elif self._is_model_available('llama-3.1-70b', available):
+                return ModelSelection(
+                    model_name='llama-3.1-70b',
+                    confidence=0.87,
+                    reason="Open-source high-performance model for code",
                     fallback_models=[]
                 )
         

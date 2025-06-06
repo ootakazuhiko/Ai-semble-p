@@ -1,0 +1,256 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Ai-semble v2 Operations Dashboard",
+    "tags": ["ai-semble", "operations", "monitoring"],
+    "style": "dark",
+    "timezone": "browser",
+    "refresh": "5s",
+    "schemaVersion": 30,
+    "version": 1,
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "System Overview",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 24, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "up{job=~\"aisemble-.*\"}",
+            "legendFormat": "{{job}} Status",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "green", "value": 1}
+              ]
+            },
+            "mappings": [
+              {"type": "value", "value": "0", "text": "DOWN"},
+              {"type": "value", "value": "1", "text": "UP"}
+            ]
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Request Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "targets": [
+          {
+            "expr": "rate(aisemble_requests_total[5m])",
+            "legendFormat": "{{service}} - {{status}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {"label": "Requests/sec", "min": 0},
+          {"show": false}
+        ],
+        "xAxis": {"show": true}
+      },
+      {
+        "id": 3,
+        "title": "Response Time",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(aisemble_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "95th percentile",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.50, rate(aisemble_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "50th percentile",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {"label": "Seconds", "min": 0},
+          {"show": false}
+        ]
+      },
+      {
+        "id": 4,
+        "title": "System Resources",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 12},
+        "targets": [
+          {
+            "expr": "aisemble_system_cpu_usage_percent",
+            "legendFormat": "CPU Usage %",
+            "refId": "A"
+          },
+          {
+            "expr": "aisemble_system_memory_usage_percent",
+            "legendFormat": "Memory Usage %",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {"label": "Percentage", "min": 0, "max": 100},
+          {"show": false}
+        ]
+      },
+      {
+        "id": 5,
+        "title": "AI Model Performance",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 12},
+        "targets": [
+          {
+            "expr": "rate(aisemble_model_inference_total[5m])",
+            "legendFormat": "{{model}} Inferences/sec",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {"label": "Inferences/sec", "min": 0},
+          {"show": false}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Error Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 12},
+        "targets": [
+          {
+            "expr": "rate(aisemble_errors_total[5m])",
+            "legendFormat": "{{service}} Errors/sec",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {"label": "Errors/sec", "min": 0},
+          {"show": false}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Active Connections",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 20},
+        "targets": [
+          {
+            "expr": "aisemble_active_connections",
+            "legendFormat": "Active Connections",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 50},
+                {"color": "red", "value": 100}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Job Queue Status",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 20},
+        "targets": [
+          {
+            "expr": "aisemble_jobs_queued",
+            "legendFormat": "Queued Jobs",
+            "refId": "A"
+          },
+          {
+            "expr": "aisemble_jobs_running",
+            "legendFormat": "Running Jobs",
+            "refId": "B"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Disk Usage",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 20},
+        "targets": [
+          {
+            "expr": "aisemble_system_disk_usage_percent",
+            "legendFormat": "Disk Usage %",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 70},
+                {"color": "red", "value": 85}
+              ]
+            },
+            "unit": "percent"
+          }
+        }
+      },
+      {
+        "id": 10,
+        "title": "Model Load Status",
+        "type": "table",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 20},
+        "targets": [
+          {
+            "expr": "aisemble_model_loaded",
+            "legendFormat": "{{model}}",
+            "refId": "A",
+            "format": "table"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {"Time": true, "__name__": true, "job": true, "instance": true},
+              "renameByName": {"model": "Model", "Value": "Status"}
+            }
+          }
+        ]
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "service",
+          "type": "query",
+          "query": "label_values(aisemble_requests_total, service)",
+          "refresh": 1,
+          "includeAll": true,
+          "allValue": ".*"
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "datasource": "Prometheus",
+          "expr": "increase(aisemble_deployment_timestamp[1m])",
+          "iconColor": "blue"
+        }
+      ]
+    }
+  }
+}
