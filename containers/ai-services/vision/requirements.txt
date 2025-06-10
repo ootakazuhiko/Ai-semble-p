@@ -3,7 +3,7 @@ uvicorn[standard]==0.34.0
 opencv-python==4.10.0.84
 Pillow==11.1.0
 numpy==2.2.1
-requests==2.32.3
+requests==2.32.4
 aiofiles==24.1.0
 pydantic==2.10.4
 structlog==24.5.0
