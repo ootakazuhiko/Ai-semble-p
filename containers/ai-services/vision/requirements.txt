@@ -8,6 +8,6 @@ aiofiles==24.1.0
 pydantic==2.10.4
 structlog==24.5.0
 prometheus-client==0.21.1
-transformers==4.48.1
+transformers==4.52.1
 torch==2.6.0
 torchvision==0.21.0
