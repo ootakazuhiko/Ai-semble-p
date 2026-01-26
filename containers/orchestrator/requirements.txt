@@ -4,7 +4,7 @@ pydantic==2.10.4
 pydantic-settings==2.7.1
 httpx==0.28.1
 structlog==24.5.0
-python-multipart==0.0.19
+python-multipart==0.0.22
 aiofiles==24.1.0
 prometheus-client==0.21.1
 python-json-logger==3.2.1
